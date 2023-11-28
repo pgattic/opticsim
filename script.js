@@ -7,9 +7,10 @@ const $=(x)=>{return document.querySelector(x);}
 const canvas = $("#display");
 const ctx = canvas.getContext("2d");
 
-canvas.width = 800;
+canvas.width = canvas.offsetWidth;
 canvas.height = 500;
 
+/* Classes */
 
 class sceneElement {
 	_dist;
@@ -111,6 +112,7 @@ class sceneImage extends sceneElement {
 
 	render() {
 		let mag = Math.abs(this.height / obj.height);
+		ctx.lineWidth = mag;
 
 		ctx.strokeStyle = "#0008";
 		ctx.setLineDash([5*mag, 5*mag]);
@@ -125,6 +127,7 @@ class sceneImage extends sceneElement {
 		ctx.fill();
 
 		$("#mag-out").textContent = mag.toFixed(3);
+		ctx.lineWidth = 1;
 	}
 }
 
@@ -135,6 +138,7 @@ let focalDist = 100;
 let obj = new sceneObject(200, 50, "#f00", $("#obj-dist-input"), $("#obj-height-input"));
 let img = new sceneImage(obj, "#f008", $("#img-dist-input"), $("#img-height-input"), obj);
 
+/* Procedure */
 
 function drawScene() {
 	ctx.strokeStyle = "#000";
@@ -150,7 +154,7 @@ function drawScene() {
 	ctx.lineTo(canvas.width/2, canvas.height-50);
 	ctx.stroke();
 
-	if (focalDist > 0) { // draw the different kinds of lenses
+	if (focalDist > 0) { // convex (converging) lens
 		ctx.beginPath();
 		ctx.ellipse(canvas.width/2, canvas.height/2, 20, 180, 0, 0, Math.PI*2);
 		ctx.stroke();
@@ -158,7 +162,7 @@ function drawScene() {
 		ctx.beginPath();
 		ctx.rect(canvas.width/2-20, canvas.height/2-180, 40, 360);
 		ctx.stroke();
-	} else {
+	} else { // concave (diverging) lens
 		ctx.beginPath();
 		ctx.ellipse(canvas.width/2 + 30, canvas.height/2, 20, 180, 0, Math.PI/2, Math.PI*3/2);
 		ctx.ellipse(canvas.width/2 - 30, canvas.height/2, 20, 180, 0, Math.PI*3/2, Math.PI/2);
@@ -166,13 +170,13 @@ function drawScene() {
 		ctx.stroke();
 	}
 
-	for (let x = canvas.width/2; x <= canvas.width-100; x += 50) {
+	for (let x = canvas.width/2; x <= canvas.width-75; x += 50) {
 		ctx.beginPath();
 		ctx.moveTo(x, canvas.height/2 - 5);
 		ctx.lineTo(x, canvas.height/2 + 5);
 		ctx.stroke();
 	}
-	for (let x = canvas.width/2; x >= 100; x -= 50) {
+	for (let x = canvas.width/2; x >= 75; x -= 50) {
 		ctx.beginPath();
 		ctx.moveTo(x, canvas.height/2 - 5);
 		ctx.lineTo(x, canvas.height/2 + 5);
@@ -213,7 +217,7 @@ function drawRays() {
 function drawFocalPoint() {
 	ctx.beginPath();
 	ctx.arc(canvas.width/2 - focalDist, canvas.height/2, 5, 0, Math.PI*2);
-	ctx.fillStyle = "green";
+	ctx.fillStyle = "#00f";
 	ctx.fill();
 }
 
@@ -246,9 +250,20 @@ canvas.onmousemove = (e) => {
 	}
 }
 
+canvas.ontouchmove = (e) => {
+	e.preventDefault();
+	obj.setPosFromCoords(e.changedTouches[0].clientX - canvas.getBoundingClientRect().x, e.changedTouches[0].clientY - canvas.getBoundingClientRect().y);
+	refreshSim();
+}
+
 $("#focal-input").value = focalDist;
 $("#focal-input").oninput = () => {
 	focalDist = $("#focal-input").value;
+	refreshSim();
+}
+
+window.onresize = () => {
+	canvas.width = canvas.offsetWidth;
 	refreshSim();
 }
 

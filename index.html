@@ -5,23 +5,26 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 		<title>OpticSim</title>
 		<style>
+
 main {
-	margin: auto;
-	position: absolute;
-	top: 50%;
-	left: 50%;
-	-ms-transform: translate(-50%, -50%);
-	transform: translate(-50%, -50%);
-	
+	margin: 0 auto;
+	max-width: 800px;
 }
+
 canvas {
+	width: 100%;
 	background: #eee;
 	border-radius: 8px;
-	transition:.25s;
 }
+
 input {
 	width: 50px;
 }
+
+p {
+	margin: 10px 0;
+}
+
 		</style>
 	</head>
 	<body>
@@ -35,6 +38,7 @@ input {
 				<p>Image Height: <input id="img-height-input" type="number" disabled>m</p>
 				<p>Magnification: <span id="mag-out"></span></p>
 			</div>
+			<small>&COPY; 2023 Preston Corless. Licensed under the MIT license. Free to use, modify or redistribute!</small>
 		</main>
 		<script src="script.js"></script>
 	</body>
