@@ -98,7 +98,7 @@ class sceneElement {
 
 let mapScale = 1;
 let focalDist = 100;
-let obj = new sceneElement(150, 50, "red", $("#obj-dist-input"), $("#obj-height-input"));
+let obj = new sceneElement(200, 50, "red", $("#obj-dist-input"), $("#obj-height-input"));
 let img = new sceneElement(obj.imgDist, obj.imgHeight, "red", $("#img-dist-input"), $("#img-height-input"));
 
 
@@ -116,9 +116,22 @@ function drawScene() {
 	ctx.lineTo(canvas.width/2, canvas.height-50);
 	ctx.stroke();
 
-	ctx.beginPath();
-	ctx.ellipse(canvas.width/2, canvas.height/2, 20, 180, 0, 0, Math.PI*2);
-	ctx.stroke();	
+	if (focalDist > 0) { // draw the different kinds of lenses
+		ctx.beginPath();
+		ctx.ellipse(canvas.width/2+0.5, canvas.height/2, 20, 180, 0, 0, Math.PI*2);
+		ctx.stroke();
+	} else if (focalDist == 0) {
+		ctx.beginPath();
+		ctx.rect(canvas.width/2-20, canvas.height/2-180, 40, 360);
+		ctx.stroke();
+	} else {
+		ctx.beginPath();
+		ctx.ellipse(canvas.width/2 + 30, canvas.height/2, 20, 180, 0, Math.PI/2, Math.PI*3/2);
+		ctx.ellipse(canvas.width/2 - 30, canvas.height/2, 20, 180, 0, Math.PI*3/2, Math.PI/2);
+		ctx.closePath();
+		ctx.stroke();
+	}
+	
 
 	for (let x = canvas.width/2; x <= canvas.width-100; x += 50) {
 		ctx.beginPath();
@@ -137,16 +150,22 @@ function drawScene() {
 function drawRays() {
 	ctx.strokeStyle = "#000";
 
+	let slope1 = (img.height-obj.height)/img.dist;
+
 	ctx.beginPath();
 	ctx.moveTo(obj.screenX, obj.screenY);
 	ctx.lineTo(canvas.width/2, obj.screenY);
 	ctx.lineTo(img.screenX, img.screenY);
+	ctx.lineTo(canvas.width, canvas.height/2 + slope1*(canvas.width/2) - obj.height); // extended ray
 	ctx.stroke();
+	
+	let slope2 = img.height/img.dist;
 
 	ctx.beginPath();
 	ctx.moveTo(obj.screenX, obj.screenY);
 	ctx.lineTo(canvas.width/2, canvas.height/2);
 	ctx.lineTo(img.screenX, img.screenY);
+	ctx.lineTo(canvas.width, (canvas.width/2) * slope2 + canvas.height/2); // extended ray
 	ctx.stroke();
 
 	ctx.beginPath();
@@ -154,6 +173,7 @@ function drawRays() {
 	ctx.lineTo(canvas.width/2-focalDist, canvas.height/2);
 	ctx.lineTo(canvas.width/2, img.screenY);
 	ctx.lineTo(img.screenX, img.screenY);
+	ctx.lineTo(canvas.width, img.screenY);
 	ctx.stroke();
 }
 
@@ -181,14 +201,14 @@ function refreshSim() {
 	drawAll();
 }
 
-canvas.onmousedown=(e)=> {
+canvas.onmousedown = (e) => {
 	if (e.layerX < canvas.width/2) {
 		obj.setPosFromCoords(e.layerX, e.layerY);
 		refreshSim();
 	}
 }
 
-canvas.onmousemove=(e)=> {
+canvas.onmousemove = (e) => {
 	if (e.buttons && e.layerX < canvas.width/2) {
 		obj.setPosFromCoords(e.layerX, e.layerY);
 		refreshSim();
