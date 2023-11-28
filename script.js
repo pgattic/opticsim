@@ -1,3 +1,4 @@
+"use strict";
 
 const $=(x)=>{return document.querySelector(x);}
 
@@ -10,7 +11,6 @@ canvas.width = 800;
 canvas.height = 500;
 
 
-
 class sceneElement {
 	_dist;
 	_height;
@@ -18,7 +18,7 @@ class sceneElement {
 	distInput;
 	heightInput;
 
-	constructor(dist = 0, height = 0, color="red", distInput, heightInput) {
+	constructor(dist = 0, height = 0, color="#f00", distInput, heightInput) {
 		this._dist = dist;
 		this._height = height;
 		this.color = color;
@@ -73,9 +73,17 @@ class sceneElement {
 		return this._height;
 	}
 
+	render(){}
+
 	setPosFromCoords(x, y){
 		this.dist = canvas.width/2 - x;
 		this.height = canvas.height/2 - y;
+	}
+}
+
+class sceneObject extends sceneElement {
+	constructor(dist = 0, height = 0, color="red", distInput, heightInput) {
+		super(dist, height, color, distInput, heightInput);
 	}
 
 	render() {
@@ -86,20 +94,46 @@ class sceneElement {
 		ctx.lineTo(this.screenX, this.screenY);
 		ctx.stroke();
 	
+		ctx.fillStyle = this.color;
 		ctx.beginPath();
 		ctx.arc(this.screenX, this.screenY, 5, 0, Math.PI*2);
-		ctx.fillStyle = "red";
 		ctx.fill();
 	}
 }
 
+class sceneImage extends sceneElement {
+	object;
+
+	constructor(obj, color="#f008", distInput, heightInput) {
+		super(obj.imgDist, obj.imgHeight, color, distInput, heightInput);
+		this.object = obj;
+	}
+
+	render() {
+		let mag = Math.abs(this.height / obj.height);
+
+		ctx.strokeStyle = "#0008";
+		ctx.setLineDash([5*mag, 5*mag]);
+		ctx.beginPath();
+		ctx.moveTo(this.screenX, canvas.height/2);
+		ctx.lineTo(this.screenX, this.screenY);
+		ctx.stroke();
+	
+		ctx.fillStyle = this.color;
+		ctx.beginPath();
+		ctx.ellipse(this.screenX, this.screenY, 5*mag, 5*mag, 0, 0, Math.PI*2);
+		ctx.fill();
+
+		$("#mag-out").textContent = mag.toFixed(3);
+	}
+}
 
 /* Vars */
 
 let mapScale = 1;
 let focalDist = 100;
-let obj = new sceneElement(200, 50, "red", $("#obj-dist-input"), $("#obj-height-input"));
-let img = new sceneElement(obj.imgDist, obj.imgHeight, "red", $("#img-dist-input"), $("#img-height-input"));
+let obj = new sceneObject(200, 50, "#f00", $("#obj-dist-input"), $("#obj-height-input"));
+let img = new sceneImage(obj, "#f008", $("#img-dist-input"), $("#img-height-input"), obj);
 
 
 function drawScene() {
@@ -118,7 +152,7 @@ function drawScene() {
 
 	if (focalDist > 0) { // draw the different kinds of lenses
 		ctx.beginPath();
-		ctx.ellipse(canvas.width/2+0.5, canvas.height/2, 20, 180, 0, 0, Math.PI*2);
+		ctx.ellipse(canvas.width/2, canvas.height/2, 20, 180, 0, 0, Math.PI*2);
 		ctx.stroke();
 	} else if (focalDist == 0) {
 		ctx.beginPath();
@@ -131,7 +165,6 @@ function drawScene() {
 		ctx.closePath();
 		ctx.stroke();
 	}
-	
 
 	for (let x = canvas.width/2; x <= canvas.width-100; x += 50) {
 		ctx.beginPath();
@@ -202,7 +235,6 @@ function refreshSim() {
 }
 
 canvas.onmousedown = (e) => {
-	console.log(e);
 	obj.setPosFromCoords(e.offsetX, e.offsetY);
 	refreshSim();
 }
