@@ -202,15 +202,14 @@ function refreshSim() {
 }
 
 canvas.onmousedown = (e) => {
-	if (e.layerX < canvas.width/2) {
-		obj.setPosFromCoords(e.layerX, e.layerY);
-		refreshSim();
-	}
+	console.log(e);
+	obj.setPosFromCoords(e.offsetX, e.offsetY);
+	refreshSim();
 }
 
 canvas.onmousemove = (e) => {
-	if (e.buttons && e.layerX < canvas.width/2) {
-		obj.setPosFromCoords(e.layerX, e.layerY);
+	if (e.buttons) {
+		obj.setPosFromCoords(e.offsetX, e.offsetY);
 		refreshSim();
 	}
 }
