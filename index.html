@@ -15,15 +15,25 @@ main {
 	
 }
 canvas {
-	background: #ccc;
+	background: #eee;
 	border-radius: 8px;
 	transition:.25s;
+}
+input {
+	width: 50px;
 }
 		</style>
 	</head>
 	<body>
 		<main>
 			<canvas id="display">Sorry but your web browser doesn't support the HTML5 canvas element!</canvas>
+			<div id="menu">
+				<p>Object Distance: <input id="obj-dist-input" type="number">m</p>
+				<p>Object Height: <input id="obj-height-input" type="number">m</p>
+				<p>Focal Length: <input id="focal-input" type="number">m</p>
+				<p>Image Distance: <input id="img-dist-input" type="number" disabled>m</p>
+				<p>Image Height: <input id="img-height-input" type="number" disabled>m</p>
+			</div>
 		</main>
 		<script src="script.js"></script>
 	</body>

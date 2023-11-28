@@ -1,28 +1,76 @@
 
+const $=(x)=>{return document.querySelector(x);}
 
-const canvas = document.getElementById("display");
+/* Constants */
+
+const canvas = $("#display");
 const ctx = canvas.getContext("2d");
 
 canvas.width = 800;
 canvas.height = 500;
 
-class sceneElement {
-	dist = 0;
-	height = 0;
-	color = "";
 
-	constructor(dist = 0, height = 0, color="red") {
-		this.dist = dist;
-		this.height = height;
+
+class sceneElement {
+	_dist;
+	_height;
+	color;
+	distInput;
+	heightInput;
+
+	constructor(dist = 0, height = 0, color="red", distInput, heightInput) {
+		this._dist = dist;
+		this._height = height;
 		this.color = color;
+		this.distInput = distInput;
+		this.heightInput = heightInput;
+
+		this.distInput.value = dist;
+		this.heightInput.value = height;
+
+		this.distInput.oninput = ()=> {
+			this._dist = this.distInput.value;
+			refreshSim();
+		}
+
+		this.heightInput.oninput = ()=> {
+			this._height = this.heightInput.value;
+			refreshSim();
+		}
 	}
 
 	get screenX(){
-		return canvas.width/2 - this.dist;
+		return canvas.width/2 - this._dist;
 	}
 
 	get screenY(){
-		return canvas.height/2 - this.height;
+		return canvas.height/2 - this._height;
+	}
+
+	get imgDist(){
+		return -1/(1/focalDist-1/this._dist);
+	}
+
+	get imgHeight(){
+		return (-1/(1/focalDist-1/this._dist))/this._dist * this._height;
+	}
+
+	set dist(value) {
+		this.distInput.value = value;
+		this._dist = value;
+	}
+
+	get dist() {
+		return this._dist;
+	}
+
+	set height(value) {
+		this.heightInput.value = value;
+		this._height = value;
+	}
+
+	get height() {
+		return this._height;
 	}
 
 	setPosFromCoords(x, y){
@@ -45,18 +93,14 @@ class sceneElement {
 	}
 }
 
-let obj = new sceneElement(150, 50);
-let img = new sceneElement();
 
+/* Vars */
+
+let mapScale = 1;
 let focalDist = 100;
+let obj = new sceneElement(150, 50, "red", $("#obj-dist-input"), $("#obj-height-input"));
+let img = new sceneElement(obj.imgDist, obj.imgHeight, "red", $("#img-dist-input"), $("#img-height-input"));
 
-function calculateImgFromObj(distObj, htObj, f) {
-	distImg = -1/(1/f-1/distObj);
-
-	//height/height = dist/dist
-	htImg = distImg/distObj * htObj;
-	return [distImg, htImg];
-}
 
 function drawScene() {
 	ctx.strokeStyle = "#000";
@@ -74,7 +118,20 @@ function drawScene() {
 
 	ctx.beginPath();
 	ctx.ellipse(canvas.width/2, canvas.height/2, 20, 180, 0, 0, Math.PI*2);
-	ctx.stroke();
+	ctx.stroke();	
+
+	for (let x = canvas.width/2; x <= canvas.width-100; x += 50) {
+		ctx.beginPath();
+		ctx.moveTo(x, canvas.height/2 - 5);
+		ctx.lineTo(x, canvas.height/2 + 5);
+		ctx.stroke();
+	}
+	for (let x = canvas.width/2; x >= 100; x -= 50) {
+		ctx.beginPath();
+		ctx.moveTo(x, canvas.height/2 - 5);
+		ctx.lineTo(x, canvas.height/2 + 5);
+		ctx.stroke();
+	}
 }
 
 function drawRays() {
@@ -88,11 +145,13 @@ function drawRays() {
 
 	ctx.beginPath();
 	ctx.moveTo(obj.screenX, obj.screenY);
+	ctx.lineTo(canvas.width/2, canvas.height/2);
 	ctx.lineTo(img.screenX, img.screenY);
 	ctx.stroke();
 
 	ctx.beginPath();
 	ctx.moveTo(obj.screenX, obj.screenY);
+	ctx.lineTo(canvas.width/2-focalDist, canvas.height/2);
 	ctx.lineTo(canvas.width/2, img.screenY);
 	ctx.lineTo(img.screenX, img.screenY);
 	ctx.stroke();
@@ -106,27 +165,39 @@ function drawFocalPoint() {
 }
 
 function drawAll() {
-	[img.dist, img.height] = calculateImgFromObj(obj.dist, obj.height, focalDist);
 	drawScene();
 	drawRays();
-	drawFocalPoint();
 	obj.render();
 	img.render();
+	drawFocalPoint();
 }
 
 drawAll();
 
-canvas.onclick=(e)=> {
-	obj.setPosFromCoords(e.layerX, e.layerY);
+function refreshSim() {
+	img.dist = obj.imgDist;
+	img.height = obj.imgHeight;
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
 	drawAll();
 }
 
-canvas.onmousemove=(e)=> {
-	if (e.buttons) {
+canvas.onmousedown=(e)=> {
+	if (e.layerX < canvas.width/2) {
 		obj.setPosFromCoords(e.layerX, e.layerY);
-		ctx.clearRect(0, 0, canvas.width, canvas.height);
-		drawAll();
+		refreshSim();
 	}
+}
+
+canvas.onmousemove=(e)=> {
+	if (e.buttons && e.layerX < canvas.width/2) {
+		obj.setPosFromCoords(e.layerX, e.layerY);
+		refreshSim();
+	}
+}
+
+$("#focal-input").value = focalDist;
+$("#focal-input").oninput = () => {
+	focalDist = $("#focal-input").value;
+	refreshSim();
 }
 
