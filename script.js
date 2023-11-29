@@ -29,15 +29,15 @@ class sceneElement {
 		this.distInput.value = dist;
 		this.heightInput.value = height;
 
-		this.distInput.oninput = ()=> {
+		this.distInput.addEventListener("input", ()=> {
 			this._dist = this.distInput.value;
 			refreshSim();
-		}
+		});
 
-		this.heightInput.oninput = ()=> {
+		this.heightInput.addEventListener("input", ()=> {
 			this._height = this.heightInput.value;
 			refreshSim();
-		}
+		});
 	}
 
 	get screenX(){
@@ -94,7 +94,7 @@ class sceneObject extends sceneElement {
 		ctx.moveTo(this.screenX, canvas.height/2);
 		ctx.lineTo(this.screenX, this.screenY);
 		ctx.stroke();
-	
+
 		ctx.fillStyle = this.color;
 		ctx.beginPath();
 		ctx.arc(this.screenX, this.screenY, 5, 0, Math.PI*2);
@@ -120,7 +120,7 @@ class sceneImage extends sceneElement {
 		ctx.moveTo(this.screenX, canvas.height/2);
 		ctx.lineTo(this.screenX, this.screenY);
 		ctx.stroke();
-	
+
 		ctx.fillStyle = this.color;
 		ctx.beginPath();
 		ctx.ellipse(this.screenX, this.screenY, 5*mag, 5*mag, 0, 0, Math.PI*2);
@@ -176,6 +176,7 @@ function drawScene() {
 		ctx.lineTo(x, canvas.height/2 + 5);
 		ctx.stroke();
 	}
+
 	for (let x = canvas.width/2; x >= 75; x -= 50) {
 		ctx.beginPath();
 		ctx.moveTo(x, canvas.height/2 - 5);
@@ -187,7 +188,14 @@ function drawScene() {
 function drawRays() {
 	ctx.strokeStyle = "#000";
 
-	let slope1 = (img.height-obj.height)/img.dist;
+	let slope1, slope2;
+
+	if (obj.dist == focalDist) {
+		slope1 = slope2 = obj.height/obj.dist;
+	} else {
+		slope1 = (img.height-obj.height)/img.dist;
+		slope2 = img.height/img.dist;
+	}
 
 	ctx.beginPath();
 	ctx.moveTo(obj.screenX, obj.screenY);
@@ -195,8 +203,6 @@ function drawRays() {
 	ctx.lineTo(img.screenX, img.screenY);
 	ctx.lineTo(canvas.width, canvas.height/2 + slope1*(canvas.width/2) - obj.height); // extended ray
 	ctx.stroke();
-	
-	let slope2 = img.height/img.dist;
 
 	ctx.beginPath();
 	ctx.moveTo(obj.screenX, obj.screenY);
@@ -210,7 +216,7 @@ function drawRays() {
 	ctx.lineTo(canvas.width/2-focalDist, canvas.height/2);
 	ctx.lineTo(canvas.width/2, img.screenY);
 	ctx.lineTo(img.screenX, img.screenY);
-	ctx.lineTo(canvas.width, img.screenY);
+	ctx.lineTo(canvas.width, img.screenY); // extended ray
 	ctx.stroke();
 }
 
@@ -267,3 +273,25 @@ window.onresize = () => {
 	refreshSim();
 }
 
+document.addEventListener("keydown", (e)=>{
+	if (e.target == document.body) {
+		switch (e.key) {
+			case "ArrowUp":
+				obj.height++;
+				refreshSim();
+				break;
+			case "ArrowRight":
+				obj.dist--;
+				refreshSim();
+				break;
+			case "ArrowDown":
+				obj.height--;
+				refreshSim();
+				break;
+			case "ArrowLeft":
+				obj.dist++;
+				refreshSim();
+				break;
+		}
+		}
+})
