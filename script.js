@@ -19,24 +19,24 @@ class sceneElement {
 	distInput;
 	heightInput;
 
-	constructor(dist = 0, height = 0, color="#f00", distInput, heightInput) {
+	constructor(dist = 0, height = 0, color = "#f00", distInput, heightInput, refreshFunc) {
 		this._dist = dist;
 		this._height = height;
 		this.color = color;
 		this.distInput = distInput;
 		this.heightInput = heightInput;
 
-		this.distInput.value = dist;
-		this.heightInput.value = height;
+		this.distInput.value = dist.toFixed(3);
+		this.heightInput.value = height.toFixed(3);
 
 		this.distInput.addEventListener("input", ()=> {
 			this._dist = this.distInput.value;
-			refreshSim();
+			refreshFunc();
 		});
 
 		this.heightInput.addEventListener("input", ()=> {
 			this._height = this.heightInput.value;
-			refreshSim();
+			refreshFunc();
 		});
 	}
 
@@ -48,16 +48,8 @@ class sceneElement {
 		return canvas.height/2 - this._height;
 	}
 
-	get imgDist(){
-		return -1/(1/focalDist-1/this._dist);
-	}
-
-	get imgHeight(){
-		return (-1/(1/focalDist-1/this._dist))/this._dist * this._height;
-	}
-
 	set dist(value) {
-		this.distInput.value = value;
+		this.distInput.value = value.toFixed(3);
 		this._dist = value;
 	}
 
@@ -66,7 +58,7 @@ class sceneElement {
 	}
 
 	set height(value) {
-		this.heightInput.value = value;
+		this.heightInput.value = value.toFixed(3);
 		this._height = value;
 	}
 
@@ -83,8 +75,16 @@ class sceneElement {
 }
 
 class sceneObject extends sceneElement {
-	constructor(dist = 0, height = 0, color="red", distInput, heightInput) {
-		super(dist, height, color, distInput, heightInput);
+	constructor(dist = 0, height = 0, color = "#f008", distInput, heightInput, refreshFunc) {
+		super(dist, height, color, distInput, heightInput, refreshFunc);
+	}
+
+	get imgDist(){
+		return -1/(1/focalDist - 1/this._dist);
+	}
+
+	get imgHeight(){
+		return (-1/(1/focalDist - 1/this._dist))/this._dist * this._height;
 	}
 
 	render() {
@@ -105,9 +105,17 @@ class sceneObject extends sceneElement {
 class sceneImage extends sceneElement {
 	object;
 
-	constructor(obj, color="#f008", distInput, heightInput) {
-		super(obj.imgDist, obj.imgHeight, color, distInput, heightInput);
+	constructor(obj, color="#f008", distInput, heightInput, refreshFunc) {
+		super(obj.imgDist, obj.imgHeight, color, distInput, heightInput, refreshFunc);
 		this.object = obj;
+	}
+
+	get objDist() {
+		return -1/(-1/this._dist-1/focalDist);
+	}
+
+	get objHeight() {
+		return -1/(-1/this._dist-1/focalDist)/this._dist * this._height;
 	}
 
 	render() {
@@ -133,10 +141,10 @@ class sceneImage extends sceneElement {
 
 /* Vars */
 
-let mapScale = 1;
+// let mapScale = 1;
 let focalDist = 100;
-let obj = new sceneObject(200, 50, "#f00", $("#obj-dist-input"), $("#obj-height-input"));
-let img = new sceneImage(obj, "#f008", $("#img-dist-input"), $("#img-height-input"), obj);
+let obj = new sceneObject(200, 50, "#f00", $("#obj-dist-input"), $("#obj-height-input"), refreshSim);
+let img = new sceneImage(obj, "#f008", $("#img-dist-input"), $("#img-height-input"), refreshSimFromImg);
 
 /* Procedure */
 
@@ -151,7 +159,7 @@ function drawScene() {
 
 	ctx.beginPath();
 	ctx.moveTo(canvas.width/2, 50);
-	ctx.lineTo(canvas.width/2, canvas.height-50);
+	ctx.lineTo(canvas.width/2, canvas.height - 50);
 	ctx.stroke();
 
 	if (focalDist > 0) { // convex (converging) lens
@@ -160,7 +168,7 @@ function drawScene() {
 		ctx.stroke();
 	} else if (focalDist == 0) {
 		ctx.beginPath();
-		ctx.rect(canvas.width/2-20, canvas.height/2-180, 40, 360);
+		ctx.rect(canvas.width/2 - 20, canvas.height/2 - 180, 40, 360);
 		ctx.stroke();
 	} else { // concave (diverging) lens
 		ctx.beginPath();
@@ -170,7 +178,7 @@ function drawScene() {
 		ctx.stroke();
 	}
 
-	for (let x = canvas.width/2; x <= canvas.width-75; x += 50) {
+	for (let x = canvas.width/2; x <= canvas.width - 75; x += 50) {
 		ctx.beginPath();
 		ctx.moveTo(x, canvas.height/2 - 5);
 		ctx.lineTo(x, canvas.height/2 + 5);
@@ -235,8 +243,6 @@ function drawAll() {
 	drawFocalPoint();
 }
 
-drawAll();
-
 function refreshSim() {
 	img.dist = obj.imgDist;
 	img.height = obj.imgHeight;
@@ -244,15 +250,40 @@ function refreshSim() {
 	drawAll();
 }
 
+function refreshSimFromImg() {
+	obj.dist = img.objDist;
+	obj.height = img.objHeight;
+	ctx.clearRect(0, 0, canvas.width, canvas.height);
+	drawAll();
+}
+
 canvas.onmousedown = (e) => {
-	obj.setPosFromCoords(e.offsetX, e.offsetY);
-	refreshSim();
+	if (e.shiftKey) {
+		img.setPosFromCoords(e.offsetX, e.offsetY);
+		refreshSimFromImg();
+	} else if (e.ctrlKey) {
+		focalDist = canvas.width/2 - e.offsetX;
+		$("#focal-input").value = focalDist.toFixed(3);
+		refreshSim();
+	} else {
+		obj.setPosFromCoords(e.offsetX, e.offsetY);
+		refreshSim();
+	}
 }
 
 canvas.onmousemove = (e) => {
 	if (e.buttons) {
-		obj.setPosFromCoords(e.offsetX, e.offsetY);
-		refreshSim();
+		if (e.shiftKey) {
+			img.setPosFromCoords(e.offsetX, e.offsetY);
+			refreshSimFromImg();
+		} else if (e.ctrlKey) {
+			focalDist = canvas.width/2 - e.offsetX;
+			$("#focal-input").value = focalDist.toFixed(3);
+			refreshSim();
+		} else {
+			obj.setPosFromCoords(e.offsetX, e.offsetY);
+			refreshSim();
+		}
 	}
 }
 
@@ -262,7 +293,7 @@ canvas.ontouchmove = (e) => {
 	refreshSim();
 }
 
-$("#focal-input").value = focalDist;
+$("#focal-input").value = focalDist.toFixed(3);
 $("#focal-input").oninput = () => {
 	focalDist = $("#focal-input").value;
 	refreshSim();
@@ -293,5 +324,7 @@ document.addEventListener("keydown", (e)=>{
 				refreshSim();
 				break;
 		}
-		}
+	}
 })
+
+refreshSim();

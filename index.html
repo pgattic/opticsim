@@ -6,6 +6,10 @@
 		<title>OpticSim</title>
 		<style>
 
+body {
+	font-family: Arial;
+}
+
 main {
 	margin: 0 auto;
 	max-width: 800px;
@@ -18,7 +22,7 @@ canvas {
 }
 
 input {
-	width: 50px;
+	width: 70px;
 }
 
 p {
@@ -31,14 +35,13 @@ p {
 		<main>
 			<canvas id="display">Sorry but your web browser doesn't support the HTML5 canvas element!</canvas>
 			<div id="menu">
-				<p>Object Distance: <input id="obj-dist-input" type="number">m</p>
-				<p>Object Height: <input id="obj-height-input" type="number">m</p>
-				<p>Focal Length: <input id="focal-input" type="number">m</p>
-				<p>Image Distance: <input id="img-dist-input" type="number" disabled>m</p>
-				<p>Image Height: <input id="img-height-input" type="number" disabled>m</p>
+				<small>Click and drag: move the object<br>Ctrl+click and drag: move the focal distance<br>Shift+click and drag: move the image</small>
+				<p>Focal Length: <input id="focal-input" type="number"></p>
+				<p>Object Distance: <input id="obj-dist-input" type="number"> Object Height: <input id="obj-height-input" type="number"></p>
+				<p>Image Distance: <input id="img-dist-input" type="number"> Image Height: <input id="img-height-input" type="number"></p>
 				<p>Magnification: <span id="mag-out"></span></p>
 			</div>
-			<small>&COPY; 2023 Preston Corless. Licensed under the MIT license. Free to use, modify or redistribute!</small>
+			<small>&COPY; 2023 Preston Corless. Licensed under the MIT license. Free to use, modify or redistribute! <a href="https://github.com/pgattic/opticsim" target="_blank">Source Code</a></small>
 		</main>
 		<script src="script.js"></script>
 	</body>
