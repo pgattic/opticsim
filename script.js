@@ -119,7 +119,7 @@ class sceneImage extends sceneElement {
 	}
 
 	render() {
-		let mag = Math.abs(this.height / obj.height);
+		let mag = Math.abs(this.dist / obj.dist);
 		ctx.lineWidth = mag;
 
 		ctx.strokeStyle = "#0008";
@@ -194,22 +194,29 @@ function drawScene() {
 }
 
 function drawRays() {
-	ctx.strokeStyle = "#000";
+	ctx.strokeStyle = "#000";	
 
-	let slope1, slope2;
+	let slope1, slope2, slope3, slope4;
+
 
 	if (obj.dist == focalDist) {
-		slope1 = slope2 = obj.height/obj.dist;
+		slope1 = slope2 = slope3 = slope4 = obj.height/obj.dist; // all resultant rays are parallel
 	} else {
 		slope1 = (img.height-obj.height)/img.dist;
-		slope2 = img.height/img.dist;
+		slope2 = obj.height/obj.dist;
+		slope3 = (img.height - 180)/img.dist;
+		slope4 = (img.height + 180)/img.dist;
 	}
+
+	let vSlope1 = 0;
+	let vSlope2 = slope2;
+	let vSlope3 = obj.height/(obj.dist-focalDist);
 
 	ctx.beginPath();
 	ctx.moveTo(obj.screenX, obj.screenY);
 	ctx.lineTo(canvas.width/2, obj.screenY);
 	ctx.lineTo(img.screenX, img.screenY);
-	ctx.lineTo(canvas.width, canvas.height/2 + slope1*(canvas.width/2) - obj.height); // extended ray
+	ctx.lineTo(canvas.width, (canvas.height/2 + (slope1*(canvas.width/2)) - obj.height)); // extended ray
 	ctx.stroke();
 
 	ctx.beginPath();
@@ -226,12 +233,54 @@ function drawRays() {
 	ctx.lineTo(img.screenX, img.screenY);
 	ctx.lineTo(canvas.width, img.screenY); // extended ray
 	ctx.stroke();
+
+	// "Incoming" virtual rays
+	ctx.setLineDash([5, 5]);
+	ctx.strokeStyle = "#0004";
+
+	ctx.beginPath();
+	ctx.moveTo(obj.screenX, obj.screenY);
+	ctx.lineTo(0, obj.screenY);
+	ctx.stroke();
+
+	ctx.beginPath();
+	ctx.moveTo(obj.screenX, obj.screenY);
+	ctx.lineTo(0, (canvas.width/2) * -slope2 + canvas.height/2);
+	ctx.stroke();
+
+	ctx.beginPath();
+	ctx.moveTo(obj.screenX, obj.screenY);
+	ctx.lineTo(0, -vSlope3 * obj.screenX + obj.screenY);
+	ctx.stroke();
+
+	// Lens boundaries
+	ctx.setLineDash([]);
+	ctx.strokeStyle = "#0002";
+
+	// ctx.beginPath();
+	// ctx.moveTo(obj.screenX, obj.screenY);
+	// ctx.lineTo(canvas.width/2, 70);
+	// ctx.lineTo(img.screenX, img.screenY);
+	// ctx.lineTo(canvas.width, (canvas.width/2) * slope3 + 70); // extended ray
+	// ctx.stroke();
+
+	// ctx.beginPath();
+	// ctx.moveTo(obj.screenX, obj.screenY);
+	// ctx.lineTo(canvas.width/2, canvas.height - 70);
+	// ctx.lineTo(img.screenX, img.screenY);
+	// ctx.lineTo(canvas.width, (canvas.width/2) * slope4 + canvas.height-70); // extended ray
+	// ctx.stroke();
 }
 
 function drawFocalPoint() {
+	ctx.fillStyle = "#00f";
 	ctx.beginPath();
 	ctx.arc(canvas.width/2 - focalDist, canvas.height/2, 5, 0, Math.PI*2);
-	ctx.fillStyle = "#00f";
+	ctx.fill();
+
+	ctx.fillStyle = "#00f6";
+	ctx.beginPath();
+	ctx.arc(canvas.width/2 + focalDist, canvas.height/2, 5, 0, Math.PI*2);
 	ctx.fill();
 }
 
@@ -295,7 +344,7 @@ canvas.ontouchmove = (e) => {
 
 $("#focal-input").value = focalDist.toFixed(3);
 $("#focal-input").oninput = () => {
-	focalDist = $("#focal-input").value;
+	focalDist = Number($("#focal-input").value);
 	refreshSim();
 }
 
